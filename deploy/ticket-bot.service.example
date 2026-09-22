@@ -1,0 +1,25 @@
+[Unit]
+Description=Telegram support ticket bot
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=ticketbot
+Group=ticketbot
+WorkingDirectory=/opt/tg_ts_ticket_bot
+ExecStart=/opt/tg_ts_ticket_bot/.venv/bin/python /opt/tg_ts_ticket_bot/main.py
+Environment=BOT_ENV_FILE=/var/lib/tg_ts_ticket_bot/.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/tg_ts_ticket_bot /var/log/tg_ts_ticket_bot
+
+[Install]
+WantedBy=multi-user.target
