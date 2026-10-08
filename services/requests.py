@@ -121,7 +121,11 @@ class RequestService:
             return
         payload = await self.db.delivery_payload(request_id)
         media = next((m for m in payload if m.get('photo') or m.get('video') or m.get('document')), {})
-        text, keyboard = request_card(request, destination)
+        original_chat = await self.db.request_original_chat(request_id)
+        display_request = list(request)
+        if original_chat:
+            display_request[8] = original_chat
+        text, keyboard = request_card(display_request, destination)
         if destination == 'client' and request[4] == 'new':
             for notice in await self.db.get_active_announcements():
                 available = 3900 - utf16_size(text)

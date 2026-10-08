@@ -2,17 +2,21 @@ import sqlite3
 from contextlib import contextmanager, closing
 from pathlib import Path
 from db.request_store import RequestStore
+from db.broadcast_store import BroadcastStore
 from datetime import datetime, timedelta
 from typing import List, Tuple, Optional
 from utils.logging_config import logger
 
-class Database(RequestStore):
+SCHEMA_VERSION = 2
+
+
+class Database(BroadcastStore, RequestStore):
     def __init__(self, db_path: str):
         self.db_path = db_path
         path = Path(db_path)
         if path.is_file():
             with self.connect() as source:
-                if source.execute("PRAGMA user_version").fetchone()[0] < 1:
+                if source.execute("PRAGMA user_version").fetchone()[0] < SCHEMA_VERSION:
                     backup_path = str(path) + datetime.now().strftime(".backup-%Y%m%d-%H%M%S-%f")
                     with closing(sqlite3.connect(backup_path)) as target:
                         source.backup(target)
@@ -166,10 +170,11 @@ class Database(RequestStore):
             if "specialist_id" not in columns:
                 cursor.execute("ALTER TABLE requests ADD COLUMN specialist_id INTEGER")
             self.init_request_store(conn)
+            self.init_broadcast_store(conn)
             legacy_count = cursor.execute("SELECT COUNT(*) FROM active_timers").fetchone()[0]
             if legacy_count:
                 logger.warning("В БД %s старых таймеров без текста. Они сохранены для ручной проверки; восстановить потерянный текст невозможно.", legacy_count)
-            cursor.execute("PRAGMA user_version = 1")
+            cursor.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
             conn.commit()
             cursor.execute("PRAGMA journal_mode = WAL")
 

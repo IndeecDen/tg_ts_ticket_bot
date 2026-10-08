@@ -18,6 +18,12 @@ class NoticeStates(StatesGroup):
     waiting_for_time_range = State()
 
 
+class BroadcastStates(StatesGroup):
+    waiting_content = State()
+    waiting_schedule = State()
+    preview = State()
+
+
 async def check_user_role(bot: Bot, user_id: int, chat_id: int, chat_type: str) -> Dict[str, bool]:
     """
     Проверяет роль пользователя.

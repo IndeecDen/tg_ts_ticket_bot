@@ -9,6 +9,7 @@ from db import database
 from utils.logging_config import logger
 from utils.telegram_utils import safe_send_message
 from .commands import check_user_role
+from .broadcast import BTN_BC_LIST, BTN_BC_NEW
 
 router = Router()
 
@@ -26,6 +27,7 @@ BTN_MY_STATS    = "📊 Моя статистика"
 BTN_STATS       = "📈 Общая статистика"
 BTN_EXPORT      = "📤 Экспорт"
 BTN_SETTINGS    = "⚙️ Настройки"
+BTN_BROADCAST   = "📣 Рассылки"
 
 # Настройки — разделы
 BTN_OPEN_REQUESTS = "📋 Открытые заявки"
@@ -104,7 +106,8 @@ def kb_admin() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text=BTN_MY_REQUESTS), KeyboardButton(text=BTN_MY_STATS)],
             [KeyboardButton(text=BTN_STATS),       KeyboardButton(text=BTN_EXPORT)],
-            [KeyboardButton(text=BTN_SETTINGS),    KeyboardButton(text=BTN_HELP)],
+            [KeyboardButton(text=BTN_SETTINGS),    KeyboardButton(text=BTN_BROADCAST)],
+            [KeyboardButton(text=BTN_HELP)],
         ],
         resize_keyboard=True,
         is_persistent=True
@@ -128,7 +131,7 @@ def kb_settings() -> ReplyKeyboardMarkup:
             [KeyboardButton(text=BTN_TIMEOUT),       KeyboardButton(text=BTN_NOTICES)],
             [KeyboardButton(text=BTN_DAILY),         KeyboardButton(text=BTN_UNASSIGNED_D)],
             [KeyboardButton(text=BTN_STOPWORDS),     KeyboardButton(text=BTN_AUTOCLEAN)],
-            [KeyboardButton(text=BTN_BACK)],
+            [KeyboardButton(text=BTN_BROADCAST),     KeyboardButton(text=BTN_BACK)],
         ],
         resize_keyboard=True,
         is_persistent=True
@@ -297,6 +300,21 @@ async def btn_settings(message: types.Message) -> None:
         await safe_send_message(message.bot, message.chat.id, "⛔ Недоступно.")
         return
     await message.answer("⚙️ Настройки:", reply_markup=kb_settings())
+
+@router.message(F.text == BTN_BROADCAST, F.chat.type == "private")
+async def btn_broadcast(message: types.Message) -> None:
+    from .broadcast import open_broadcast_menu
+    await open_broadcast_menu(message)
+
+@router.message(F.text == BTN_BC_NEW, F.chat.type == "private")
+async def btn_broadcast_new(message: types.Message, state: FSMContext) -> None:
+    from .broadcast import start_new_broadcast
+    await start_new_broadcast(message, state)
+
+@router.message(F.text == BTN_BC_LIST, F.chat.type == "private")
+async def btn_broadcast_list(message: types.Message) -> None:
+    from .broadcast import open_broadcast_list
+    await open_broadcast_list(message)
 
 # ── Открытые заявки / Без исполнителя ───────────────────────────
 

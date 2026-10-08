@@ -16,6 +16,20 @@ class Config(BaseSettings):
     database_path: str = str(BASE_DIR / 'bot.db')
     log_level: str = 'INFO'
     log_path: str = str(BASE_DIR / 'bot.log')
+    # Часовой пояс бота для расписаний (IANA, например Europe/Moscow).
+    timezone: str = 'UTC'
+    # Пауза между отправками рассылки в секундах: ограничение скорости Telegram.
+    broadcast_send_interval: float = Field(default=0.05, ge=0.05, le=60)
+
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, value):
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError('TIMEZONE должен быть доступным часовым поясом IANA; установите tzdata')
+        return value
 
     @field_validator('database_path', 'log_path')
     @classmethod

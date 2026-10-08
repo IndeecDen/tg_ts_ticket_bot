@@ -11,6 +11,7 @@
 *.db
 *.db-wal
 *.db-shm
+*.db.lock
 *.db.backup-*
 *.log
 *.log.*

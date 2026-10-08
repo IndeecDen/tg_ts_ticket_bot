@@ -103,12 +103,22 @@ async def help_cmd(message: types.Message) -> None:
         response += "/add_ignore — Добавить слово в игнорируемый список\n"
         response += "/del_ignore — Удалить слово из игнорируемого списка\n"
         response += "/list_ignore — Показать список игнорируемых слов\n"
+    if roles['is_admin_or_botadmin']:
+        response += "\n📣 /broadcast — рассылки в личном диалоге: текст, фото, документ, видео или аудио.\n"
+        response += "Форматируйте текст средствами Telegram; текст до 4096, подпись до 1024 символов.\n"
+        response += "После предпросмотра: отправить сейчас, таймер (минуты или ГГГГ-ММ-ДД ЧЧ:ММ), отмена.\n"
+        response += "Часовой пояс показан при вводе таймера. /cancel отменяет подготовку.\n"
+        response += "Список рассылок → Открыть → Ошибки: результаты по группам.\n"
+    response += "\n/whoami — регистрация клиентской группы; при privacy mode используйте /whoami@имя_бота.\n"
     response += "\n💡 Для создания заявки отправьте сообщение с описанием проблемы (доступно клиентам)."
     await safe_send_message(message.bot, message.chat.id, response)
 
 @router.message(Command("cancel"))
 async def cancel_cmd(message: types.Message, state: FSMContext) -> None:
     """Обрабатывает команду /cancel."""
+    from .broadcast import cancel_preparation
+    if await cancel_preparation(message, state):
+        return
     if await state.get_state():
         await state.clear()
         await safe_send_message(message.bot, message.chat.id, "Диалог отменён.")
